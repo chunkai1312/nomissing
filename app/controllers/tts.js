@@ -5,7 +5,7 @@ var express = require('express'),
   itriTTS = {
     url: 'http://tts.itri.org.tw/TTSService/Soap_1_3.php?wsdl',
     accountID: 'idsl.cs.ntust', 
-    password: 'ma300', 
+    password: 'ma300' 
   };
 
 module.exports = function (app) {
@@ -21,7 +21,7 @@ router.post('/ConvertSimple', function (req, res, next) {
   };
   soap.createClient(itriTTS.url, function(err, client) {
     client.ConvertSimple(args, function(err, result) {
-        res.send(result);
+      res.send(result);
     });
   });
 });

@@ -16,7 +16,9 @@
     "glob": "~4.3.1",
     "mongoose": "~3.8.20",
     "ejs": "~2.1.4",
-    "soap": "^0.6.1"
+    "soap": "^0.6.1",
+    "request": "^2.51.0",
+    "xml2js": "^0.4.4"
   },
   "devDependencies": {
     "gulp": "~3.8.10",
