@@ -1,12 +1,7 @@
 var express = require('express'),
   router = express.Router(),
   mongoose = require('mongoose'),
-  soap = require('soap'),
-  itriTTS = {
-    url: 'http://tts.itri.org.tw/TTSService/Soap_1_3.php?wsdl',
-    accountID: 'idsl.cs.ntust', 
-    password: 'ma300' 
-  };
+  itriTTS = require('../services/itriTTS');
 
 module.exports = function (app) {
   app.use('/api/TTSService', router);
@@ -14,41 +9,32 @@ module.exports = function (app) {
 
 // ConvertSimple
 router.post('/ConvertSimple', function (req, res, next) {
-  var args = {
-    accountID: itriTTS.accountID, 
-    password: itriTTS.password, 
-    TTStext: req.body.TTStext
-  };
-  soap.createClient(itriTTS.url, function(err, client) {
-    client.ConvertSimple(args, function(err, result) {
-      res.send(result);
-    });
+  var param = req.body.TTStext;
+  itriTTS.ConvertSimple(param, function(err, result) {
+    if (err) next(err);
+    res.json(result);
   });
 });
 
 // ConvertText
 router.post('/ConvertText', function (req, res, next) {
-  var args = {
-    accountID: itriTTS.accountID, 
-    password: itriTTS.password, 
+  var params = {
     TTStext: req.body.TTStext,
-    TTSSpeaker: req.body.TTSSpeaker, 
-    volume: req.body.volume, 
-    speed: req.body.speed, 
+    TTSSpeaker: req.body.TTSSpeaker,
+    volume: req.body.volume,
+    speed: req.body.speed,
     outType: req.body.outType
   };
-  soap.createClient(itriTTS.url, function(err, client) {
-    client.ConvertText(args, function(err, result) {
-        res.send(result);
-    });
+
+  itriTTS.ConvertText(params, function (err, result) {
+    if (err) next(err);
+    res.json(result);
   });
 });
 
 // ConvertAdvancedText
 router.post('/ConvertAdvancedText', function (req, res, next) {
-  var args = {
-    accountID: itriTTS.accountID, 
-    password: itriTTS.password, 
+  var params = {
     TTStext: req.body.TTStext,
     TTSSpeaker: req.body.TTSSpeaker, 
     volume: req.body.volume, 
@@ -58,23 +44,18 @@ router.post('/ConvertAdvancedText', function (req, res, next) {
     PitchSign: req.body.PitchSign,
     PitchScale: req.body.PitchScale
   };
-  soap.createClient(itriTTS.url, function(err, client) {
-    client.ConvertAdvancedText(args, function(err, result) {
-        res.send(result);
-    });
+
+  itriTTS.ConvertAdvancedText(params, function(err, result) {
+    if (err) next(err);
+    res.json(result);
   });
 });
 
 // GetConvertStatus
 router.post('/GetConvertStatus', function (req, res, next) {
-  var args = {
-    accountID: itriTTS.accountID, 
-    password: itriTTS.password,  
-    convertID: req.body.convertID
-  };
-  soap.createClient(itriTTS.url, function(err, client) {
-    client.GetConvertStatus(args, function(err, result) {
-      res.send(result);
-    });
+  var param = req.body.convertID;
+  itriTTS.GetConvertStatus(param, function(err, result) {
+    if (err) next(err);
+    res.json(result);
   });
 });

@@ -1,7 +1,10 @@
-var request = require('request'),
-  xml2js = require('xml2js'),
+var mongoose = require('mongoose'),
+  Weather = mongoose.model('Weather'),
+  request = require('request'),
+  parseString = require('xml2js').parseString,
+  itriTTS = require('../services/itriTTS'),
   cwbWeather = {
-    base_url: 'http://opendata.cwb.gov.tw/opendata/MFC/',
+    baseUrl: 'http://opendata.cwb.gov.tw/opendata/MFC/',
     city: [
       { name: '台北市', xml: 'F-C0032-009.xml' },
       { name: '新北市', xml: 'F-C0032-010.xml' },
@@ -28,22 +31,100 @@ var request = require('request'),
     ]
   };
 
-exports.getWeather = function () {
-  request('http://opendata.cwb.gov.tw/opendata/MFC/F-C0032-009.xml', function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      var parser = new xml2js.Parser();
-      parser.parseString(body, function (err, result) {
-          console.dir(result);
-          var data = result.cwbopendata.dataset[0].parameterSet[0].parameter,
-            text = '';
-          
-          for (var i = 0; i < data.length; i++) {
-            text = text + data[i].parameterValue[0];
-          }
-          console.log(text);
-          // return text;
-      });
-      
+exports.cities = function () {
+  return cwbWeather.city;
+};
+
+exports.fetch = function (cityName, callback) {
+  var city, xml, memo, text = '';
+
+  var findCityByName = function (cityName) {
+    for (var index in cwbWeather.city) {
+      if (cwbWeather.city[index].name === cityName) {
+        xml = xml + cwbWeather.city[index].xml;
+        return cwbWeather.city[index];
+      }
     }
+    return null;
+  }
+
+  // find city by name
+  city = findCityByName(cityName);
+  if (findCityByName(cityName) === null) 
+    return callback(new Error('City not found'));
+
+  // fetch xml file from CWB
+  xml = cwbWeather.baseUrl + city.xml;
+  request(xml, function (error, response, body) {
+    if (error) return callback(error);
+    if (response.statusCode != 200) return callback(new Error('Request error.'));
+
+    // parse xml string 
+    parseString(body, function (err, result) {
+      if (err) return callback(err);
+      
+      memo = result.cwbopendata.dataset[0].parameterSet[0].parameter;
+      for (var index in memo) {
+        text = text + memo[index].parameterValue[0];
+      }
+      console.log('--\n' + cityName + '\n' + text);
+
+      // use itriTTS.ConvertSimple
+      itriTTS.ConvertSimple(text, function (err, result) {
+        if (err) return callback(err);
+
+        // fetch audio file
+        var fetchAudio = function fetchAudio(convertID) {
+          itriTTS.GetConvertStatus(convertID, function (err, result) {
+            if (err) callback(err);
+            if (!result.audio) {
+              fetchAudio(convertID);
+            }
+            else {
+              console.log(result.audio);
+
+              // save city's weather data 
+              Weather.findOne({city: cityName}, function (err, weather) {
+                if (err) return callback(err);
+                if (weather === null) weather = new Weather();
+                weather.city = cityName;
+                weather.text = text;
+                weather.audio = result.audio;
+                weather.save(function (err) {
+                  if (err) return callback(err);
+                  return callback(null, weather);
+                });
+              });
+            }
+          });
+        }(result.resultConvertID);
+      });
+    });
   });
 };
+
+//   fetchAll : function (callback) {
+
+
+//     var i = 0;
+//     for (var index in cwbWeather.city) {
+//       setTimeout(function(index) {
+//         module.exports.fetch(cwbWeather.city[index].name, function (err, result) {
+//           if (err) return callback(err);
+//           i++;
+//           console.log(i);
+//           if (i === cwbWeather.city.length) {
+//             console.log('ok');
+//           }
+//         });  
+//       }, index*5000, index );
+
+//     }
+//   }
+
+// };
+
+
+
+
+

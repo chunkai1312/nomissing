@@ -1,11 +1,9 @@
-// Example model
-
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
-  username: String,
-  password: String,
+  uuid: String,
+  access_token: String,
 });
 
 UserSchema.virtual('date')
