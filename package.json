@@ -19,7 +19,7 @@
     "soap": "^0.6.1",
     "request": "^2.51.0",
     "xml2js": "^0.4.4",
-    "basic-auth": "^1.0.0"
+    "basic-auth-connect": "^1.0.0"
   },
   "devDependencies": {
     "gulp": "~3.8.10",

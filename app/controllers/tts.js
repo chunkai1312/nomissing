@@ -1,14 +1,24 @@
 var express = require('express'),
   router = express.Router(),
+  basicAuth = require('basic-auth-connect'),
   mongoose = require('mongoose'),
+  User = mongoose.model('User'),
   itriTTS = require('../services/itriTTS');
 
 module.exports = function (app) {
   app.use('/api/TTSService', router);
 };
 
+basicAuth = (basicAuth(function (user, pass, authenticate) {
+  User.findOne({uuid: user, access_token: pass}, authenticate);
+  var authenticate = function (err, user) {
+    if (err) return next(err);
+    if (user !== null) return true;
+  };  
+}));
+
 // ConvertSimple
-router.post('/ConvertSimple', function (req, res, next) {
+router.post('/ConvertSimple', basicAuth, function (req, res, next) {
   var param = req.body.TTStext;
   itriTTS.ConvertSimple(param, function(err, result) {
     if (err) next(err);
@@ -17,7 +27,7 @@ router.post('/ConvertSimple', function (req, res, next) {
 });
 
 // ConvertText
-router.post('/ConvertText', function (req, res, next) {
+router.post('/ConvertText', basicAuth, function (req, res, next) {
   var params = {
     TTStext: req.body.TTStext,
     TTSSpeaker: req.body.TTSSpeaker,
@@ -33,7 +43,7 @@ router.post('/ConvertText', function (req, res, next) {
 });
 
 // ConvertAdvancedText
-router.post('/ConvertAdvancedText', function (req, res, next) {
+router.post('/ConvertAdvancedText', basicAuth, function (req, res, next) {
   var params = {
     TTStext: req.body.TTStext,
     TTSSpeaker: req.body.TTSSpeaker, 
@@ -52,7 +62,7 @@ router.post('/ConvertAdvancedText', function (req, res, next) {
 });
 
 // GetConvertStatus
-router.post('/GetConvertStatus', function (req, res, next) {
+router.post('/GetConvertStatus', basicAuth, function (req, res, next) {
   var param = req.body.convertID;
   itriTTS.GetConvertStatus(param, function(err, result) {
     if (err) next(err);
